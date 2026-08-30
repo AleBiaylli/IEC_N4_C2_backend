@@ -1,10 +1,78 @@
-#from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 from rest_framework import viewsets 
-from .serializer import ProgrammerSerializer 
-from .models import programmer
-# Create your views here.
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+from .models import programmer, Sistema
+from .serializer import ProgrammerSerializer, SistemaSerializer
+
+
+# --- Vistas Web HTML ---
+
+def home_view(request):
+    return render(request, 'index.html')
+
+
+@login_required(login_url='rest_framework:login')
+def programmers_list_view(request):
+    query = request.GET.get('q', '')
+    if query:
+        programmers = programmer.objects.filter(Nombre__icontains=query)
+    else:
+        programmers = programmer.objects.all()
+        
+    return render(request, 'programmers_list.html', {'programmers': programmers})
+
+
+@login_required(login_url='rest_framework:login')
+def sistemas_list_view(request):
+    query = request.GET.get('q', '')
+    if query:
+        sistemas = Sistema.objects.filter(nombre_sistema__icontains=query)
+    else:
+        sistemas = Sistema.objects.all()
+        
+    return render(request, 'sistemas_list.html', {'sistemas': sistemas})
+
+
+def api_root_redirect(request):
+    return redirect('programmer-list')
+
+
+# --- Vistas API REST (ViewSets para Router) ---
+
 class ProgrammerViewSet(viewsets.ModelViewSet): 
-    # acá creamos una consulta o QUERY a nuestra tabla, trayendo todos los campos como un objeto. 
     queryset = programmer.objects.all() 
-    # Agregamos la clase ProgrammerSerializer que ya tiene el modelo serializado para mostrar
     serializer_class = ProgrammerSerializer
+
+
+class SistemaViewSet(viewsets.ModelViewSet):
+    queryset = Sistema.objects.all()
+    serializer_class = SistemaSerializer
+
+
+# --- Vistas API REST (APIViews personalizadas) ---
+
+class ProgrammerListAPIView(APIView):
+    def get(self, request):
+        query = request.GET.get('q', '')
+        if query:
+            programmers = programmer.objects.filter(Nombre__icontains=query)
+        else:
+            programmers = programmer.objects.all()
+            
+        serializer = ProgrammerSerializer(programmers, many=True)
+        return Response(serializer.data)
+
+
+class SistemaListAPIView(APIView):
+    def get(self, request):
+        query = request.GET.get('q', '')
+        if query:
+            sistemas = Sistema.objects.filter(nombre_sistema__icontains=query)
+        else:
+            sistemas = Sistema.objects.all()
+            
+        serializer = SistemaSerializer(sistemas, many=True)
+        return Response(serializer.data)

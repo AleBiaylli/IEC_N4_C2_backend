@@ -1,16 +1,33 @@
-from django.urls import path, include 
-from rest_framework import routers 
-from api import views 
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-router = routers.DefaultRouter() # este elemento enrutador permite manejar múltiples rutas. 
-# esta es la base del conjunto de rutas o la raíz de las rutas 
-# acá se manejan las rutas o ENDsPOINTS que pueda tener tu API 
-router.register(r'programmers', views.ProgrammerViewSet) 
-# la r permite que no se interprete como un salto de línea o como un escape de carácter 
-# usamos la r para indicar que no tome los caracteres como \n o \t que es un salto de línea o una tabulación, es un formato tipo RAW de python. 
-# 'programmers' es un ENDPOINT 
-urlpatterns = [   
-    path('', include(router.urls)),
-# la ruta base va a incluir todos los elementos que tenga el router que hemos creado en URLS 
-# esta es la lista de URLS que maneja ROUTER en sus elementos URLS 
-] 
+from .views import (
+    home_view, 
+    programmers_list_view, 
+    sistemas_list_view,
+    ProgrammerViewSet,
+    SistemaViewSet,
+    ProgrammerListAPIView,
+    SistemaListAPIView
+)
+
+# Configuración del Router para los ViewSets
+router = DefaultRouter()
+router.register(r'programmers', ProgrammerViewSet, basename='programmer')
+router.register(r'sistemas', SistemaViewSet, basename='sistema')
+
+urlpatterns = [
+    # Rutas de vistas Web HTML
+    path('', home_view, name='home'),
+    path('programadores-web/', programmers_list_view, name='programmers-list-html'),
+    path('programadores_web/', programmers_list_view),
+    path('sistemas-web/', sistemas_list_view, name='sistemas-list-html'),
+    path('sistemas_web/', sistemas_list_view),
+
+    # Endpoints de la API REST generados por el Router (/api/programmers/ y /api/sistemas/)
+    path('api/', include(router.urls)),
+
+    # Endpoints personalizados para APIViews con soporte de filtro ?q=
+    path('api/programmers-list/', ProgrammerListAPIView.as_view(), name='programmers-list-api'),
+    path('api/sistemas-list/', SistemaListAPIView.as_view(), name='sistemas-list-api'),
+]

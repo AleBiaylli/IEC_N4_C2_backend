@@ -56,10 +56,12 @@ ROOT_URLCONF = 'IEC_N4_C2_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # Agregamos la ruta de la carpeta raíz aquí
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -127,3 +129,23 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+# Configuración global de Django REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+}
+# ==========================================
+# CONFIGURACIÓN DE REDIRECCIÓN DE AUTENTICACIÓN
+# ==========================================
+
+# Ruta a la que se redirige tras un inicio de sesión exitoso
+LOGIN_REDIRECT_URL = '/'  # O la ruta deseada (ej: '/', '/home_view/', etc.)
+
+# Ruta a la que se redirige tras cerrar sesión
+LOGOUT_REDIRECT_URL = '/'

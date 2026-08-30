@@ -14,13 +14,14 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin 
-from django.urls import path, include 
-from django.views.generic import RedirectView
+from django.contrib import admin
+from django.urls import path, include
 
-urlpatterns = [ 
-    path('', RedirectView.as_view(url='/api-auth/login/', permanent=False)),
-    path('api/', include('api.urls')), # importante
-    path("api-auth/", include("rest_framework.urls")),
+urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Rutas para el botón de Login/Logout en la interfaz navegable de DRF
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    
+    path('', include('api.urls')),
 ]
