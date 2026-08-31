@@ -1,14 +1,27 @@
 from rest_framework import serializers
-from .models import programmer, Sistema
+from .models import Teacher, Course, Student, StudentCourse
 
-class ProgrammerSerializer(serializers.ModelSerializer): 
-    class Meta: 
-        model = programmer 
-        # fields = ('fullname','languaje','is_active’) acá podemos traer cualquier atributo del modelo o campo 
-        fields = '__all__' 
-        # con la opción de '__all__' nos traemos todo para ver y tener acceso a todo el registro de cada programador 
-
-class SistemaSerializer(serializers.ModelSerializer):
+class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Sistema
+        model = Teacher
+        fields = '__all__'
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    teacher_detail = TeacherSerializer(source='teacher', read_only=True)
+
+    class Meta:
+        model = Course
+        fields = '__all__'
+
+
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = '__all__'
+
+
+class StudentCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentCourse
         fields = '__all__'

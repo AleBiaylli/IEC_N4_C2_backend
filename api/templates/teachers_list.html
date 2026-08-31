@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid px-0">
+  <h2 class="mb-3">Gestión de Docentes</h2>
+  <div class="row g-3">
+    <!-- Formulario -->
+    <div class="col-lg-3 col-md-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-3">
+          <h5 id="formTitle" class="card-title fw-bold fs-6 mb-3">Agregar Docente</h5>
+          <form id="teacherForm">
+            <input type="hidden" id="teacherId" />
+            <div class="mb-2">
+              <input type="text" id="first_name" class="form-control form-control-sm" placeholder="Nombre" required />
+            </div>
+            <div class="mb-2">
+              <input type="text" id="last_name" class="form-control form-control-sm" placeholder="Apellido" required />
+            </div>
+            <button type="submit" class="btn btn-success btn-sm w-100 mt-2">Guardar</button>
+            <button type="button" id="btnCancel" class="btn btn-secondary btn-sm w-100 mt-2 d-none" onclick="limpiarFormulario()">Cancelar Edición</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="col-lg-9 col-md-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover mb-0 align-middle">
+              <thead class="table-dark">
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Apellido</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="teachersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const getCookie = name => {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + '=') {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+  const csrftoken = getCookie('csrftoken');
+
+  async function cargarDocentes() {
+    const res = await fetch('/api/teachers/');
+    const data = await res.json();
+    const lista = Array.isArray(data) ? data : (data.results || []);
+    const tbody = document.getElementById('teachersTableBody');
+    tbody.innerHTML = '';
+
+    if (lista.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No hay docentes registrados.</td></tr>';
+      return;
+    }
+
+    lista.forEach(t => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${t.id}</td>
+          <td>${t.first_name}</td>
+          <td>${t.last_name}</td>
+          <td class="text-center">
+            <button class="btn btn-warning btn-sm py-0 px-2" onclick="prepararEditar(${t.id}, '${t.first_name}', '${t.last_name}')">Editar</button>
+            <button class="btn btn-danger btn-sm py-0 px-2" onclick="eliminarDocente(${t.id})">Eliminar</button>
+          </td>
+        </tr>`;
+    });
+  }
+
+  document.getElementById('teacherForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id = document.getElementById('teacherId').value;
+    const payload = {
+      first_name: document.getElementById('first_name').value,
+      last_name: document.getElementById('last_name').value
+    };
+
+    const url = id ? `/api/teachers/${id}/` : '/api/teachers/';
+    const method = id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      limpiarFormulario();
+      cargarDocentes();
+    }
+  });
+
+  function prepararEditar(id, firstName, lastName) {
+    document.getElementById('teacherId').value = id;
+    document.getElementById('first_name').value = firstName;
+    document.getElementById('last_name').value = lastName;
+    document.getElementById('formTitle').innerText = 'Editar Docente';
+    document.getElementById('btnCancel').classList.remove('d-none');
+  }
+
+  function limpiarFormulario() {
+    document.getElementById('teacherId').value = '';
+    document.getElementById('teacherForm').reset();
+    document.getElementById('formTitle').innerText = 'Agregar Docente';
+    document.getElementById('btnCancel').classList.add('d-none');
+  }
+
+  async function eliminarDocente(id) {
+    if (confirm('¿Eliminar este docente?')) {
+      const res = await fetch(`/api/teachers/${id}/`, {
+        method: 'DELETE',
+        headers: { 'X-CSRFToken': csrftoken }
+      });
+      if (res.ok) cargarDocentes();
+    }
+  }
+
+  cargarDocentes();
+</script>
+{% endblock %}

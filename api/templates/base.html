@@ -3,13 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Sistema de Gestión{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <title>{% block title %}Gestión Académica{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .hover-shadow:hover {
+            transform: translateY(-3px);
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        }
+    </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">Django Backend</a>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Navbar Principal -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-link navbar-brand fw-bold" href="{% url 'home' %}">🎓 Plataforma Académica</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -20,33 +35,45 @@
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'programmers-list-html' %}">Programadores</a>
+                            <a class="nav-link" href="{% url 'teachers-list-html' %}">Docentes</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'sistemas-list-html' %}">Sistemas</a>
+                            <a class="nav-link" href="{% url 'courses-list-html' %}">Asignaturas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'students-list-html' %}">Estudiantes</a>
                         </li>
                     {% endif %}
                 </ul>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center">
                     {% if user.is_authenticated %}
-                        <span class="text-light me-2">Hola, <strong>{{ user.username }}</strong></span>
-                        <form action="{% url 'rest_framework:logout' %}" method="post" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Cerrar Sesión</button>
-                        </form>
+                        <span class="text-light me-3 small">👤 {{ user.username }}</span>
+                        <a href="{% url 'rest_framework:logout' %}?next={% url 'home' %}" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
                     {% else %}
-                        <a href="{% url 'rest_framework:login' %}?next={{ request.path }}" class="btn btn-outline-light btn-sm">Iniciar Sesión</a>
+                        <a href="{% url 'rest_framework:login' %}?next={% url 'home' %}" class="btn btn-primary btn-sm">Iniciar Sesión</a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="container-fluid px-4">
-        {% block content %}{% endblock %}
-    </div>
+    <!-- Contenido Principal -->
+    <main class="container my-4 flex-grow-1">
+        {% block content %}
+        {% endblock %}
+    </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block scripts %}{% endblock %}
+    <!-- Footer -->
+    <footer class="bg-white text-center text-muted py-3 border-top mt-auto">
+        <div class="container">
+            <small>Sistema de Gestión Académica &copy; 2026 - Django & Bootstrap 5</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.bundle.min.js"></script>
+    
+    {% block scripts %}
+    {% endblock %}
 </body>
 </html>
