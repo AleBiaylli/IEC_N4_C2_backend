@@ -18,28 +18,36 @@ Including another URLconf
 URL configuration for IEC_N4_C2_backend project.
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, re_path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from api.views import login_view, home_view, teachers_view, courses_view, students_view
+from api.views import (
+    login_view, 
+    home_view, 
+    teachers_view, 
+    courses_view, 
+    students_view,
+    custom_page_not_found_view
+)
 
 urlpatterns = [
+    # Admin de Django
     path('admin/', admin.site.urls),
 
     # 1. RUTA DE LOGIN PERSONALIZADO
     path('login/', login_view, name='login'),
-    
-    # 2. RUTAS FRONTEND
+
+    # 2. RUTAS FRONTEND (Vistas HTML)
     path('', home_view, name='home'),
     path('teachers/', teachers_view, name='teachers_list'),
-    path('teachers/', teachers_view, name='teachers-list-html'),
+    path('teachers/html/', teachers_view, name='teachers-list-html'),
     path('courses/', courses_view, name='courses_list'),
-    path('courses/', courses_view, name='courses-list-html'),
+    path('courses/html/', courses_view, name='courses-list-html'),
     path('students/', students_view, name='students_list'),
-    path('students/', students_view, name='students-list-html'),
+    path('students/html/', students_view, name='students-list-html'),
 
     # 3. ENDPOINTS API REST Y JWT
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -47,9 +55,16 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 
-    # 4. REGISTRO OBLIGATORIO DEL NAMESPACE DE DRF (Soluciona el error actual)
+    # 4. REGISTRO OBLIGATORIO DEL NAMESPACE DE DRF
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     # 5. RUTAS DE TU API REST
     path('api/', include('api.urls')),
+
+    # 6. RUTA COMODÍN (CATCH-ALL) PARA CUALQUIER PALABRA O RUTA NO REGISTRADA
+    # Importante: Debe ir OBLIGATORIAMENTE al final de la lista
+    re_path(r'^.*$', custom_page_not_found_view, name='catch_all_404'),
 ]
+
+# Manejador global por defecto de Django
+handler404 = 'api.views.custom_page_not_found_view'

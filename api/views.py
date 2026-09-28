@@ -91,3 +91,10 @@ def students_view(request):
     La protección de acceso se valida en el cliente (JS) mediante el JWT.
     """
     return render(request, 'students_list.html')
+
+
+def custom_page_not_found_view(request, exception=None):
+    """
+    Vista personalizada para capturar rutas inexistentes (Error 404).
+    """
+    return render(request, '404.html', status=404)
