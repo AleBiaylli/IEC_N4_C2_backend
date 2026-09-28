@@ -11,11 +11,13 @@
             <p class="lead text-secondary mb-3">
                 Bienvenido al sistema centralizado de control escolar. Administra el cuerpo docente, las asignaturas dictadas y la nómina de estudiantes matriculados.
             </p>
-            {% if not user.is_authenticated %}
+            
+            <!-- Contenedor dinámico controlado por JS en lugar de condicionales de servidor Django -->
+            <div id="auth-alert-container">
                 <div class="alert alert-warning py-2 mb-0 d-inline-block" role="alert">
                     <small>⚠️ Debes <strong>iniciar sesión</strong> para acceder a los módulos de edición.</small>
                 </div>
-            {% endif %}
+            </div>
         </div>
         <div class="col-lg-4 text-center d-none d-lg-block">
             <!-- SVG Ilustración Académica -->
@@ -43,7 +45,7 @@
                         Total Registrados: <span id="count-teachers">...</span>
                     </div>
                     <div class="d-grid">
-                        <a href="{% url 'teachers-list-html' %}" class="btn btn-outline-primary fw-semibold">
+                        <a href="{% url 'teachers_list' %}" class="btn btn-outline-primary fw-semibold">
                             Gestionar Docentes →
                         </a>
                     </div>
@@ -66,7 +68,7 @@
                         Total Cursos: <span id="count-courses">...</span>
                     </div>
                     <div class="d-grid">
-                        <a href="{% url 'courses-list-html' %}" class="btn btn-outline-success fw-semibold">
+                        <a href="{% url 'courses_list' %}" class="btn btn-outline-success fw-semibold">
                             Gestionar Cursos →
                         </a>
                     </div>
@@ -89,7 +91,7 @@
                         Total Alumnos: <span id="count-students">...</span>
                     </div>
                     <div class="d-grid">
-                        <a href="{% url 'students-list-html' %}" class="btn btn-outline-dark fw-semibold">
+                        <a href="{% url 'students_list' %}" class="btn btn-outline-dark fw-semibold">
                             Gestionar Alumnos →
                         </a>
                     </div>
@@ -100,42 +102,62 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script>
-  // Función para obtener el conteo dinámico desde la API REST
-  async function cargarEstadisticas() {
-    try {
-      const [resTeachers, resCourses, resStudents] = await Promise.all([
-        fetch('/api/teachers/'),
-        fetch('/api/courses/'),
-        fetch('/api/students/')
-      ]);
+    async function cargarEstadisticas() {
+        // Verifica si hay sesión activa para ajustar la alerta del banner
+        const token = localStorage.getItem('access_token');
+        const alertContainer = document.getElementById('auth-alert-container');
+        
+        if (token && alertContainer) {
+            alertContainer.innerHTML = `
+                <div class="alert alert-success py-2 mb-0 d-inline-block" role="alert">
+                    <small>✅ Sesión autenticada. Tienes acceso completo.</small>
+                </div>
+            `;
+        }
 
-      if (resTeachers.ok) {
-        const data = await resTeachers.json();
-        const total = Array.isArray(data) ? data.length : (data.count || data.results?.length || 0);
-        document.getElementById('count-teachers').innerText = total;
-      }
+        try {
+            // Usamos getAuthHeaders() para adjuntar 'Authorization: Bearer <token>'
+            const headers = getAuthHeaders();
 
-      if (resCourses.ok) {
-        const data = await resCourses.json();
-        const total = Array.isArray(data) ? data.length : (data.count || data.results?.length || 0);
-        document.getElementById('count-courses').innerText = total;
-      }
+            const [resTeachers, resCourses, resStudents] = await Promise.all([
+                fetch('/api/teachers/', { method: 'GET', headers: headers }),
+                fetch('/api/courses/', { method: 'GET', headers: headers }),
+                fetch('/api/students/', { method: 'GET', headers: headers })
+            ]);
 
-      if (resStudents.ok) {
-        const data = await resStudents.json();
-        const total = Array.isArray(data) ? data.length : (data.count || data.results?.length || 0);
-        document.getElementById('count-students').innerText = total;
-      }
-    } catch (error) {
-      console.error('Error al cargar datos del dashboard:', error);
-      document.getElementById('count-teachers').innerText = '0';
-      document.getElementById('count-courses').innerText = '0';
-      document.getElementById('count-students').innerText = '0';
+            if (resTeachers.ok) {
+                const data = await resTeachers.json();
+                const total = Array.isArray(data) ? data.length : (data.count || data.results?.length || 0);
+                document.getElementById('count-teachers').innerText = total;
+            } else {
+                document.getElementById('count-teachers').innerText = '0';
+            }
+
+            if (resCourses.ok) {
+                const data = await resCourses.json();
+                const total = Array.isArray(data) ? data.length : (data.count || data.results?.length || 0);
+                document.getElementById('count-courses').innerText = total;
+            } else {
+                document.getElementById('count-courses').innerText = '🔒 Protegido';
+            }
+
+            if (resStudents.ok) {
+                const data = await resStudents.json();
+                const total = Array.isArray(data) ? data.length : (data.count || data.results?.length || 0);
+                document.getElementById('count-students').innerText = total;
+            } else {
+                document.getElementById('count-students').innerText = '🔒 Protegido';
+            }
+        } catch (error) {
+            console.error('Error al cargar datos del dashboard:', error);
+            document.getElementById('count-teachers').innerText = '0';
+            document.getElementById('count-courses').innerText = '0';
+            document.getElementById('count-students').innerText = '0';
+        }
     }
-  }
 
-  document.addEventListener('DOMContentLoaded', cargarEstadisticas);
+    document.addEventListener('DOMContentLoaded', cargarEstadisticas);
 </script>
 {% endblock %}
